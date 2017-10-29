@@ -17,6 +17,8 @@ import time
 import threading
 import math
 import string
+import random
+from Crypto.Random.random import getrandbits
 from decimal import *
 import tipbot.config as config
 import tipbot.coinspecs as coinspecs
@@ -55,14 +57,19 @@ def GetParam(parms,idx):
     return parms[idx]
   return None
 
-def GetPaymentID(link):
+def GetPaymentID(link,random=False):
   salt="2u3g55bkwrui32fi3g4bGR$j5g4ugnujb-"+coinspecs.name+"-";
+  if random:
+    salt = salt + "-" + str(time.time()) + "-" + str(getrandbits(128))
   p = hashlib.sha256(salt+link.identity()).hexdigest();
   try:
     redis_hset("paymentid",p,link.identity())
   except Exception,e:
     log_error('GetPaymentID: failed to set payment ID for %s to redis: %s' % (link.identity(),str(e)))
   return p
+
+def GetRandomPaymentID(link):
+  return GetPaymentID(link, True)
 
 def GetIdentityFromPaymentID(p):
   if not redis_hexists("paymentid",p):
@@ -76,8 +83,18 @@ def GetIdentityFromPaymentID(p):
     identity = "freenode:"+identity
   return identity
 
+def IsAddressLengthValid(address):
+  if type(coinspecs.address_length[0]) == list:
+    for allist in coinspecs.address_length:
+      if len(address) >= allist[0] and len(address) <= allist[1]:
+        return True
+  else:
+    if len(address) >= coinspecs.address_length[0] and len(address) <= coinspecs.address_length[1]:
+      return True
+  return False
+
 def IsValidAddress(address):
-  if len(address) < coinspecs.address_length[0] or len(address) > coinspecs.address_length[1]:
+  if not IsAddressLengthValid(address):
     return False
   for prefix in coinspecs.address_prefix:
     if address.startswith(prefix):
@@ -198,7 +215,7 @@ def StringToUnits(s):
 
 def SendJSONRPCCommand(host,port,method,params):
   try:
-    http = httplib.HTTPConnection(host,port,timeout=20)
+    http = httplib.HTTPConnection(host,port,timeout=config.rpc_timeout)
   except Exception,e:
     log_error('SendJSONRPCCommand: Error connecting to %s:%u: %s' % (host, port, str(e)))
     raise
@@ -235,7 +252,7 @@ def SendJSONRPCCommand(host,port,method,params):
 
 def SendHTMLCommand(host,port,method):
   try:
-    http = httplib.HTTPConnection(host,port,timeout=20)
+    http = httplib.HTTPConnection(host,port,timeout=config.rpc_timeout)
   except Exception,e:
     log_error('SendHTMLCommand: Error connecting to %s:%u: %s' % (host, port, str(e)))
     raise
