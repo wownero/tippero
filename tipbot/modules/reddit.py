@@ -160,9 +160,10 @@ class RedditNetwork(Network):
             while '' in cmd:
               cmd.remove('')
             cmd[0] = cmd[0].strip(' \t\n\r')
-            if cmd[0] == u'tip' and cmd[1][0:3] == u'/u/':
-                log_info("Subbing out /u/ from username")
-                cmd[1] = cmd[1][3:]
+            if cmd[1]:
+                if cmd[0] == u'tip' and cmd[1][0:3] == u'/u/':
+                    log_info("Subbing out /u/ from username")
+                    cmd[1] = cmd[1][3:]
             log_info('Found command from %s: %s' % (link.identity(), str(cmd)))
             if self.on_command:
               self.on_command(link,cmd)
