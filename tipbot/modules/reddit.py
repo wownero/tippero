@@ -231,7 +231,7 @@ class RedditNetwork(Network):
         if fullname in self.items_cache:
           item=self.items_cache[fullname]
         if not item:
-          item = self.reddit.mesage(fullname)
+          item = self.reddit.message(fullname)
         if not item:
           gen=self.reddit.info([fullname])
           item=next(gen, None)
@@ -269,7 +269,7 @@ class RedditNetwork(Network):
       log_log('loaded last seen ids: %s ' % str(self.last_seen_ids))
 
     if self.use_unread_api:
-      for message in self.reddit.get_unread():
+      for message in self.reddit.inbox.unread():
         self._parse(message,not message.was_comment)
 
     else:
