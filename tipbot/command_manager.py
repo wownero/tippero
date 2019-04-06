@@ -9,6 +9,7 @@
 # any later version.
 #
 
+import time
 import tipbot.config as config
 from tipbot.utils import *
 
@@ -23,7 +24,7 @@ def SendToProxy(link,msg):
 def RunRegisteredCommand(link,ifyes,yesdata,ifno,nodata):
   if link.identity() not in calltable:
     calltable[link.identity()] = []
-  calltable[link.identity()].append([link,ifyes,yesdata,ifno,nodata])
+  calltable[link.identity()].append([link,ifyes,yesdata,ifno,nodata,time.time()+20])
   if link.network.is_identified(link):
     RunNextCommand(link,True)
   else:
@@ -57,6 +58,17 @@ def RunNextCommand(link,registered):
     del calltable[identity][0]
   finally:
     Unlock()
+
+def PruneOldWaitingCommands():
+  Lock()
+  now=time.time()
+  for identity in calltable.keys():
+    while len(calltable[identity])>0 and calltable[identity][0][5]<now:
+      link=calltable[identity][0][0]
+      log_info('deleting old command: %s, %s' % (str(calltable[identity][0][1]), str(calltable[identity][0][3])))
+      link.send("Nickserv didn't reply, gonna have to deny access, mate")
+      del calltable[identity][0]
+  Unlock()
 
 def Commands(link,cmd):
   if IsAdmin(link):
@@ -169,7 +181,7 @@ def OnCommand(link,cmd,check_admin,check_registered):
     if 'admin' in c and c['admin']:
       check_admin(link,c['function'],cmd,SendToProxy,"You must be admin")
     elif 'registered' in c and c['registered']:
-      check_registered(link,c['function'],cmd,SendToProxy,"You must be registered with Freenode")
+      check_registered(link,c['function'],cmd,SendToProxy,"You must be registered with Freenode, or known for a minute")
     else:
       Lock()
       try:
@@ -213,6 +225,7 @@ def RunIdleFunctions(param=None):
         log_error("Exception running idle function %s from module %s: %s" % (str(f),module,str(e)))
       finally:
         Unlock()
+  PruneOldWaitingCommands()
 
 def RunModuleHelpFunction(module,link):
   if module in modules:

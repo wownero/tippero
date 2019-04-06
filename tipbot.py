@@ -108,6 +108,9 @@ for modulename in modulenames:
 
 def GetBalance(link,cmd):
   nick=link.user.nick
+  if link.group and nick.startswith('blackbab'):
+    link.send_private("Stop spamming the public channel")
+    return
   try:
     balance,confirming = RetrieveBalance(link)
     sbalance = AmountToString(balance)
@@ -194,7 +197,8 @@ def LinkingAccounts(link,cmd):
   link.send_private('any account interchangeably. If the accounts are on different networks')
   link.send_private('(eg, IRC and Reddit), the user names need to be prefixed with the network\'s')
   link.send_private('name (freenode: for Freenode IRC, reddit: for Reddit), like this:')
-  like.send_private(' !link_account reddit:myredditname')
+  link.send_private(' !link_account reddit:myredditname    (do that on Freenode)')
+  link.send_private(' !link_account freenode:myircnick     (do that on Reddit)')
   link.send_private('Linking accounts is irreversible, so make sure you only link to accounts')
   link.send_private('under your control')
 
@@ -251,7 +255,7 @@ def Help(link,cmd):
 
 def Info(link,cmd):
   link.send_private("Info for %s:" % config.tipbot_name)
-  link.send_private("Copyright 2014,2015 moneromooo - http://duckpool.mooo.com/tipbot/")
+  link.send_private("Copyright 2014,2015 moneromooo - https://github.com/tippero/tippero")
   link.send_private("Type !help, or !commands for a list of commands")
   link.send_private("NO WARRANTY, YOU MAY LOSE YOUR COINS")
   link.send_private("By sending your %s to %s, you are giving up their control" % (coinspecs.name, config.tipbot_name))
