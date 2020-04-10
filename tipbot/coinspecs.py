@@ -10,6 +10,16 @@
 #
 
 coinspecs = {
+   "wownero": {
+    "name": "Wownero",
+    "symbol": "WOW",
+    "atomic_units": 1e11,
+    "denominations": [],
+    "address_length": [97, 97], # min/max size of addresses
+    "address_prefix": ['W', 'o'], # allowed prefixes of addresses
+    "min_withdrawal_fee": 2000000000,
+    "web_wallet_url": "", # None is there's none
+  },
   "monero": {
     "name": "Monero",
     "symbol": "XMR",
