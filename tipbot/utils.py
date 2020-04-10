@@ -57,6 +57,13 @@ def GetParam(parms,idx):
     return parms[idx]
   return None
 
+def SetPaymentID(link,pid):
+  try:
+    redis_hset("paymentid",pid,link.identity())
+  except Exception,e:
+    log_error('GetPaymentID: failed to set payment ID for %s to redis: %s' % (link.identity(),str(e)))
+  return
+
 def GetPaymentID(link,random=False):
   salt="2u3g55bkwrui32fi3g4bGR$j5g4ugnujb-"+coinspecs.name+"-";
   if random:
